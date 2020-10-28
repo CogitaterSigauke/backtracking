@@ -1,3 +1,5 @@
+//Cogitater Sigauke
+
 package com.java.app;
 
 import java.util.List;
@@ -8,6 +10,8 @@ import java.util.HashMap;
 import java.util.Scanner;
 import java.io.File; 
 import java.io.FileNotFoundException; 
+import java.util.Random;
+import java.util.concurrent.ThreadLocalRandom;
 
 public class Main{
 
@@ -67,7 +71,8 @@ public class Main{
 
         // printGraph(graph);
         System.out.println("SIZE = " + map.size() + "  " + graph.length);
-        backtrack(res, graph, map);
+        List<Integer> maxs = new ArrayList<>();
+        backtrack(res, maxs, graph, map);
         printFinalSolution(graph);
 
     }
@@ -82,70 +87,53 @@ public class Main{
         System.out.println();
     }
 
-    public static void processSolution(List<Integer> a, Vertex[] graph, Map<Integer, Integer> map){
-        int currMax = maxEdgeLength(a, graph, map);
+    public static void processSolution(List<Integer> a, List<Integer> maxs, Vertex[] graph, Map<Integer, Integer> map){
+        int currMax = maxEdge(maxs);
         if(currMax < max){
             max = currMax;
-            res = new ArrayList<Integer>(a);
-            System.out.println("BANDWITH: " + max);
-            System.out.println("--------------");   
-            for(int i=0; i<res.size(); i++){
-                System.out.print(res.get(i) + "  ");
-            }
-            System.out.println();
-            System.out.println();
+            res = a;
+            System.out.println("BW:  "+max);
         }
-
         if(max <= 1){
             finished = true;
         }
     }
 
-    public static void backtrack(List<Integer> a, Vertex [] graph, Map<Integer, Integer> map){
+    public static void backtrack(List<Integer> a, List<Integer> maxs, Vertex [] graph, Map<Integer, Integer> map){
         
         int [] candidates;
         int nCandicates;
 
         if(isASolution(a, graph)){
-            processSolution(a, graph, map);
+            processSolution(a, maxs, graph, map);
         }
         else{
 
-            candidates = constructCandidates(new ArrayList<Integer>(a), graph);
+            candidates = constructCandidates(a, graph);
             nCandicates = candidates.length;
             
             for(int i=0; i<nCandicates; i++){
 
-                // a.add(candidates[i]);
                 List<Integer> temp = new ArrayList<Integer>(a);
+                List<Integer> temp2 = new ArrayList<Integer>(maxs);
+
                 temp.add(candidates[i]);
-                backtrack(temp, graph, map);
+                int num = currMaxEdge(temp, graph, map);
+                
+                // if there is an edge greater than max on the recently input break
+                if(max <= num){
+                    break;
+                }
+                temp2.add(num);
+                backtrack(temp, temp2, graph, map);
                 if(finished){
                     break;
                 }
             }
-
         }
-
-    }
-
-
-    public static void printGraph(Vertex [] graph){
-        
-        for(int i=0; i<graph.length; i++){
-            
-            Vertex v = graph[i];
-            List<Vertex> e = v.getEdgeVertices();
-
-            for(int j = 0; j<e.size(); j++){
-                
-                System.out.println(v.getPos()+"{ "+ v.getVertexNumber() + ";" + e.get(j).getVertexNumber() + " }");
-            }
-
-        }
-
     }
     public static int[] constructCandidates(List<Integer> a, Vertex[] graph){
+
         int[] candidates = new int[graph.length - a.size()];
         int j = 0;
         for(int i=0; i<graph.length; i++){
@@ -154,35 +142,57 @@ public class Main{
                 j++;
             }
         }
+
+        shuffle(candidates);
         return candidates;
     }
 
+    //randomize candidates array position to incease the spead
+    public static void shuffle(int[] array){
+        Random rand = ThreadLocalRandom.current();
+        for (int i = array.length - 1; i > 0; i--){
+
+            int index = rand.nextInt(i + 1);
+            int a = array[index];
+            array[index] = array[i];
+            array[i] = a;
+        }
+    }
 
     public static boolean isASolution(List<Integer> a, Vertex [] graph){
         return a.size() == graph.length;
     }
-
-    public static int maxEdgeLength(List<Integer> a, Vertex [] graph, Map<Integer, Integer> map){
-        for(int i=0; i<graph.length; i++){
+    // check for a max edge of greater than max
+    public static int currMaxEdge(List<Integer> a, Vertex [] graph, Map<Integer, Integer> map){
+        
+        for(int i=0; i<a.size(); i++){
             int z = map.get(a.get(i));
             graph[z].setPos(i);
         }
-        int currMax = 0;
-        for(int i=0; i<graph.length; i++){
-            Vertex v = graph[i];
-            List<Vertex> e = v.getEdgeVertices();
 
-            for(int j = 0; j<e.size(); j++){
+        int currMax = 0;
+
+        Vertex v = graph[map.get(a.get(a.size()-1))]; //only cjeck the adges of the new element
+        List<Vertex> e = v.getEdgeVertices();
+
+        for(int j = 0; j<e.size(); j++){
+
+            if(a.contains(e.get(j).getVertexNumber())){
 
                 int l = Math.abs(v.getPos() -  e.get(j).getPos()); 
-
-                if(currMax < l){
-                    currMax = l;
-                }
-
+                currMax = Math.max(l, currMax);
             }
         }
-        return currMax;       
-
+        
+        return currMax; 
+    }
+    // check for a max edge of greater than max
+    public static int maxEdge(List<Integer> maxs){
+        
+        int currMax = 0;
+        for(int i=0; i<maxs.size(); i++){
+            currMax = Math.max(maxs.get(i), currMax);
+        }
+        return currMax; 
     }
 }
