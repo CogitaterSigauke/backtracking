@@ -13,9 +13,10 @@ import java.io.FileNotFoundException;
 import java.util.Random;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.Iterator;
-import java.util.*; 
-import java.lang.*; 
-
+import java.util.LinkedHashMap;
+import java.util.Comparator;
+import java.util.LinkedList;
+import java.util.Collections;
 
 public class Main{
 
@@ -76,9 +77,7 @@ public class Main{
             x++;
             
         } 
-
-        // printGraph(graph);
-        System.out.println("SIZE = " + map.size() + "  " + graph.length);
+        
         Map<Integer,Integer> maxs = new HashMap<>();
         Map<Integer,Integer> aMap = new HashMap<>();
         Random random = ThreadLocalRandom.current();
@@ -197,7 +196,6 @@ public class Main{
             }
         }
         sortByEdge(aMap, candidates, graph, map); // sort candidates by longest edge to prune faster
-        // shuffle(candidates)//
         return candidates;
     }
 
@@ -235,18 +233,6 @@ public class Main{
         } 
         return temp; 
     } 
-
-    //randomize candidates array position to incease the spead
-    // public static void shuffle(int[] array){
-        
-    //     Random rand = ThreadLocalRandom.current();
-    //     for (int i = array.length - 1; i > 0; i--){
-    //         int index = rand.nextInt(i + 1);
-    //         int a = array[index];
-    //         array[index] = array[i];
-    //         array[i] = a;
-    //     }
-    // }
 
     public static boolean isASolution(Map<Integer,Integer> aMap, Vertex [] graph){
         return aMap.size() == graph.length;
@@ -326,5 +312,7 @@ public class Main{
         
         return currMax; 
     }
+
+
 
 }
