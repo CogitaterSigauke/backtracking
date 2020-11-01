@@ -13,6 +13,8 @@ import java.io.FileNotFoundException;
 import java.util.Random;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.Iterator;
+import java.util.*; 
+import java.lang.*; 
 
 
 public class Main{
@@ -31,6 +33,7 @@ public class Main{
 
         Vertex [] graph = new Vertex [numVertices];
         Map<Integer, Integer> map = new HashMap<>();
+        Map<String, Edge> edgeMap = new HashMap<>();
 
         Vertex even = new Vertex(-1, -1);
         Vertex odd = new Vertex(-1, -1);
@@ -62,6 +65,12 @@ public class Main{
                 }
                 even.putEdge(odd);
                 odd.putEdge(even);
+                Edge e = new Edge(even.getVertexNumber(), odd.getVertexNumber());
+                String s = even.getVertexNumber()+":"+odd.getVertexNumber();
+                edgeMap.put(s, e);
+                even.putEdge(e);
+                odd.putEdge(e);
+
             }
             
             x++;
@@ -117,7 +126,7 @@ public class Main{
         }
         else{
 
-            candidates = constructCandidates(aMap, graph);
+            candidates = constructCandidates(aMap, graph, map);
             nCandicates = candidates.length;
             
             for(int i=0; i<nCandicates; i++){
@@ -177,7 +186,7 @@ public class Main{
 
 
     }
-    public static int[] constructCandidates(Map<Integer,Integer> aMap, Vertex[] graph){
+    public static int[] constructCandidates(Map<Integer,Integer> aMap, Vertex[] graph, Map<Integer,Integer> map){
 
         int[] candidates = new int[graph.length - aMap.size()];
         int j = 0;
@@ -187,22 +196,57 @@ public class Main{
                 j++;
             }
         }
-
-        shuffle(candidates);
+        sortByEdge(aMap, candidates, graph, map); // sort candidates by longest edge to prune faster
+        // shuffle(candidates)//
         return candidates;
     }
 
-    //randomize candidates array position to incease the spead
-    public static void shuffle(int[] array){
+    public static void sortByEdge(Map<Integer,Integer> aMap, int[] array, Vertex[] graph, Map<Integer,Integer> map){
         
-        Random rand = ThreadLocalRandom.current();
-        for (int i = array.length - 1; i > 0; i--){
-            int index = rand.nextInt(i + 1);
-            int a = array[index];
-            array[index] = array[i];
-            array[i] = a;
+        
+        Map<Integer,Integer> temp = new HashMap<>();
+        for(int i = 0; i<array.length; i++){
+            aMap.put(array[i], aMap.size());
+            int maxEdge = currMaxEdge(aMap, graph, map);
+            temp.put(array[i], maxEdge);
+            aMap.remove(array[i]);
         }
+        temp = sortByValue((HashMap<Integer, Integer>)temp);
+        int i = array.length - 1;
+        for (Map.Entry<Integer, Integer> en : temp.entrySet()) {
+            array[i] = en.getKey(); 
+            i--;
+        } 
+
     }
+
+    public static HashMap<Integer, Integer> sortByValue(HashMap<Integer, Integer> hm){
+        
+        List<Map.Entry<Integer, Integer> > list = new LinkedList<Map.Entry<Integer, Integer> >(hm.entrySet());
+        Collections.sort(list, new Comparator<Map.Entry<Integer, Integer> >() { 
+            public int compare(Map.Entry<Integer, Integer> o1, Map.Entry<Integer, Integer> o2){ 
+                return (o1.getValue()).compareTo(o2.getValue()); 
+            } 
+        }); 
+          
+        HashMap<Integer, Integer> temp = new LinkedHashMap<Integer, Integer>(); 
+        for (Map.Entry<Integer, Integer> aa : list) { 
+            temp.put(aa.getKey(), aa.getValue()); 
+        } 
+        return temp; 
+    } 
+
+    //randomize candidates array position to incease the spead
+    // public static void shuffle(int[] array){
+        
+    //     Random rand = ThreadLocalRandom.current();
+    //     for (int i = array.length - 1; i > 0; i--){
+    //         int index = rand.nextInt(i + 1);
+    //         int a = array[index];
+    //         array[index] = array[i];
+    //         array[i] = a;
+    //     }
+    // }
 
     public static boolean isASolution(Map<Integer,Integer> aMap, Vertex [] graph){
         return aMap.size() == graph.length;
